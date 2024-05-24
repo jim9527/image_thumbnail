@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
+      crossorigin="anonymous"
+    />
+    <title>Document</title>
+    <script>
+      function handleOnSubmit() {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        const width = formData.get("width");
+        const height = formData.get("height");
+        const quality = formData.get("quality");
+        const format = formData.get("format");
+        let filename = "";
+        for (const pair of formData.entries()) {
+          if (pair[0] === "file") {
+            if (!pair[1] || pair[1].size === 0) {
+              alert("please select a image");
+              return;
+            }
+            filename = pair[1].name;
+          }
+          console.log(pair);
+        }
+        fetch("/image-api/upload", {
+          method: "post",
+          body: formData,
+        })
+          .then(async (response) => {
+            const { code, errorMsg } = await response.json()
+            if (code === 1) {
+                throw new Error(errorMsg)
+            }
+            Array.prototype.forEach.call(
+              document.getElementsByClassName("image-title"),
+              (element) => {
+                element.style.display = "block";
+              },
+            );
+            // document.getElementsByClassName("image-title").forEach();
+            var reader = new FileReader();
+            reader.onload = function (e) {
+              document
+                .getElementById("source")
+                .setAttribute("src", e.target.result);
+            };
+            reader.readAsDataURL(formData.get("file"));
+
+            document
+              .getElementById("img")
+              .setAttribute(
+                "src",
+                `/image-api/thumbnail/${filename}?width=${width}&height=${height}&quality=${quality}&format=${format}&v=${Math.random()}`,
+              );
+          })
+          .catch((error) => {
+            document.getElementById("result").innerHTML =
+              `<span style='color: red; padding: 20px;'>Error: ${error.message}</span>`;
+          });
+      }
+    </script>
+    <style>
+      form {
+        margin: 0 auto;
+        max-width: 700px;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      body {
+        padding-bottom: 40px;
+      }
+
+      @media (max-width: 768px) {
+        form {
+          max-width: 320px;
+        }
+
+        #result {
+          flex-direction: column;
+        }
+
+        .img2 {
+            margin-top: 20px;
+        }
+      }
+
+      #result {
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      h1 {
+        margin-top: 40px;
+        text-align: center;
+      }
+
+      img {
+        max-width: 100%;
+      }
+      
+    </style>
+  </head>
+  <body>
+    <h1>Generate thumbnail</h1>
+    <form action="javascript:void(0)" onsubmit="handleOnSubmit()">
+      <div class="mb-3">
+        <label for="exampleInputEmail1" class="form-label">file</label>
+        <input
+          type="file"
+          name="file"
+          class="form-control"
+          id="exampleInputEmail1"
+          aria-describedby="emailHelp"
+          accept=".png,.jpeg,.webp"
+        />
+        <div id="emailHelp" class="form-text">
+          We'll never share your file with anyone else.
+        </div>
+      </div>
+      <div class="mb-3">
+        <label for="exampleInputPassword1" class="form-label">Width</label>
+        <input
+          name="width"
+          type="number"
+          class="form-control"
+          id="exampleInputPassword1"
+        />
+      </div>
+      <div class="mb-3">
+        <label for="exampleInputPassword1" class="form-label">Height</label>
+        <input
+          name="height"
+          type="number"
+          class="form-control"
+          id="exampleInputPassword1"
+        />
+      </div>
+      <div class="mb-3">
+        <label for="exampleInputPassword1" class="form-label">quality</label>
+        <input
+          type="number"
+          name="quality"
+          min="1"
+          max="100"
+          class="form-control"
+          id="exampleInputPassword1"
+        />
+        <div id="Help" class="form-text">1 ~ 100</div>
+      </div>
+      <div class="mb-3">
+        <label for="exampleInputPassword1" class="form-label">format</label>
+        <select
+          name="format"
+          min="1"
+          max="100"
+          class="form-control"
+          id="exampleInputPassword1"
+        >
+          <option value="png">png</option>
+          <option value="jpeg">jpeg</option>
+          <option value="webp">webp</option>
+        </select>
+        <div id="Help" class="form-text">1 ~ 100</div>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+    <div
+      id="result"
+    >
+      <div
+        style="
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+        "
+      >
+        <h2 class="image-title" style="display: none">Source:</h2>
+        <img id="source" />
+      </div>
+      <div
+        class="img2"
+        style="
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+        "
+      >
+        <h2 class="image-title" style="display: none">Thumbnail:</h2>
+        <img id="img" />
+      </div>
+    </div>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>
