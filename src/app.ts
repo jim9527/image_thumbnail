@@ -37,6 +37,8 @@ app.get("/image-api/thumbnail/:filename", async (req, res) => {
 app.post("/image-api/upload", upload.single("file"), function (req, res, next) {
   const ip = req.clientIp || "none";
 
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', '*')
   if (req.file) {
     const { buffer, originalname, mimetype, size } = req.file;
     try {
@@ -67,6 +69,7 @@ app.get("/image-api/test", function (req, res, next) {
   res.json({
     data: tempMemory.infos(),
     memoryUsageInfo,
+    ip: req.clientIp,
   });
 });
 
